@@ -46,7 +46,7 @@ http://www.imagemagick.org/
 Installation
 ============
 
-*  You should have a Windows based server with Administrative facility to install softwares. This is particularly
+*  You should have a Windows/Linux based server with Administrative facility to install softwares. This is particularly
 important, if you are using a shared hosting service.
 *  Both Inkscape and ImageMagick need to be installed in order to make the whole system work. Please visit to
 the respective sites and follow the instructions on installation.
@@ -63,12 +63,13 @@ the respective sites and follow the instructions on installation.
 </servlet-mapping>
 *  Modify the URL-pattern as per your application needs.
 *  Specify the xml attribute exportHandler='FCExporter' assuming that the jsp rendering the chart is present in /JSP/ExportExample folder
-*  Configuration of Inkscape and ImageMagick path: Open fusioncharts_export.properties file present in the Classes directory and make changes in the following values there:
+*  Configuration of the folder where the generated image is to be saved in server is to be set in fusioncharts_export.properties file inside the Classes directory.
+*  Configuration of Inkscape and ImageMagick path(Only for Windows Environment) : Open fusioncharts_export.properties file present in the Classes directory and make changes in the following values there:
 
 ********************************fusioncharts_export.properties*************************************
 #Please specify the path to a folder with write permissions relative to web application root
-#The exported image/PDF files would be saved here.
-SAVEPATH=/JSP/Example/ExportedImages/
+#The exported image/PDF files would be saved here(for Linux based server SAVEPATH should be changed to relative or absolute path accordingly)
+SAVEPATH=/JSP/ExportExample/ExportedImages/
 
 #This constant HTTP_URI stores the HTTP reference to 
 #the folder where exported charts will be saved. 
@@ -85,10 +86,10 @@ FILESUFFIXFORMAT=TIMESTAMP
 OVERWRITEFILE=false
 INTELLIGENTFILENAMING=true
 
-#Set the path of Inkscape here
+#Set the path of Inkscape here(Only for Windows)
 INKSCAPE_PATH=C:\\Program Files (x86)\\Inkscape
 
-#Set the path of ImageMagick here
+#Set the path of ImageMagick here(Only for Windows)
 IMAGEMAGICK_PATH=C:\\Program Files\\ImageMagick-6.9.0-Q16
 *********************************************************************************************
 License
@@ -106,4 +107,4 @@ Known Issues / limitations:
 softwares.
 *  If the chart has any external images as in logo, background or in anchors they will not get exported in the exported
 image.
-*  The whole system is configured for Windows based server.
+*  The whole system is configured for Windows/Linux based server.
