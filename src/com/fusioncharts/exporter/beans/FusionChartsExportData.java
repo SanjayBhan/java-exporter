@@ -3,6 +3,8 @@
  */
 package com.fusioncharts.exporter.beans;
 
+import org.json.JSONObject;
+
 /**
  * This bean contains the fields corresponding to the request parameters
  * obtained from FusionCharts chart.
@@ -11,6 +13,8 @@ package com.fusioncharts.exporter.beans;
  * @author InfoSoft Global (P) Ltd.
  * 
  */
+
+
 public class FusionChartsExportData {
 
 	protected String stream = null;
@@ -19,6 +23,7 @@ public class FusionChartsExportData {
 	protected String meta_height = null;
 	protected String meta_DOMId = null;
 	protected String meta_bgColor = null;
+	protected JSONObject meta_bgImageData = null;
 
 	/**
 	 * Constructor from fields.
@@ -32,7 +37,7 @@ public class FusionChartsExportData {
 	 */
 	public FusionChartsExportData(String stream, String parameters,
 			String meta_width, String meta_height, String meta_DOMId,
-			String meta_bgColor) {
+			String meta_bgColor, String meta_bgImageData) {
 		super();
 		this.stream = stream;
 		this.parameters = parameters;
@@ -40,6 +45,9 @@ public class FusionChartsExportData {
 		this.meta_height = meta_height;
 		this.meta_DOMId = meta_DOMId;
 		this.meta_bgColor = meta_bgColor;
+		if(meta_bgImageData != null){
+			this.meta_bgImageData = new JSONObject(meta_bgImageData);
+		}
 	}
 
 	/**
@@ -156,4 +164,11 @@ public class FusionChartsExportData {
 		this.stream = stream;
 	}
 
+	public JSONObject getMeta_bgImageData() {
+		return meta_bgImageData;
+	}
+
+	public void setMeta_bgImageData(JSONObject meta_bgImageData) {
+		this.meta_bgImageData = meta_bgImageData;
+	}
 }

@@ -3,6 +3,8 @@
  */
 package com.fusioncharts.exporter.beans;
 
+import org.json.JSONObject;
+
 /**
  * Contains the metadata of the chart like width,height, bgColor
  * 
@@ -15,6 +17,7 @@ public class ChartMetadata {
 	private double height = -1;
 	private String bgColor;
 	private String DOMId = "";
+	private JSONObject bgImage = null;
 
 	/**
 	 * Returns the value in the field bgColor
@@ -92,4 +95,11 @@ public class ChartMetadata {
 		this.width = width;
 	}
 
+	public JSONObject getBgImage() {
+		return bgImage;
+	}
+
+	public void setBgImage(JSONObject bgImage) {
+		this.bgImage = bgImage;
+	}
 }
