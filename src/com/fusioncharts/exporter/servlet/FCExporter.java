@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -58,12 +59,16 @@ public class FCExporter extends HttpServlet {
 	 */
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		// Create the bean, set all the properties
+		System.out.println("PRINTING PARAMETER");
+		Map<String, String[]> paramMap = request.getParameterMap();
+		System.out.println(paramMap.toString());
+		
 		FusionChartsExportData exportData = new FusionChartsExportData(request
 				.getParameter("stream"), request.getParameter("parameters"),
 				request.getParameter("meta_width"), request
 				.getParameter("meta_height"), request
 				.getParameter("meta_DOMId"), request
-				.getParameter("meta_bgColor"));
+				.getParameter("meta_bgColor"), request.getParameter("encodedImgData"));
 		ExportBean exportBean = FusionChartsExportHelper
 				.parseExportRequestStream(exportData);               
 

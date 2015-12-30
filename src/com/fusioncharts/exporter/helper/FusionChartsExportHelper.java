@@ -215,7 +215,9 @@ public class FusionChartsExportHelper {
 		metadata.setDOMId(DOMId);
 		// Background color of chart
 		metadata.setBgColor(bgColor);
-
+		// Set image background information
+		metadata.setBgImage(exportData.getMeta_bgImageData());
+		
 		exportBean.setMetadata(metadata);
 		exportBean.setStream(stream);
 

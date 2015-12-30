@@ -12,9 +12,20 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.codec.binary.Base64;
+import org.json.JSONObject;
 
 import com.fusioncharts.exporter.beans.ChartMetadata;
 import com.fusioncharts.exporter.beans.ExportBean;
@@ -26,6 +37,7 @@ import com.fusioncharts.exporter.error.LOGMESSAGE;
 import com.fusioncharts.exporter.error.Status;
 import com.fusioncharts.exporter.helper.FusionChartsExportHelper;
 import com.fusioncharts.exporter.helper.InputValidator;
+import com.fusioncharts.exporter.servlet.FCExporter;
 
 public class FCExporter_SVG2ALL 
 {
@@ -37,11 +49,16 @@ public class FCExporter_SVG2ALL
 	private ByteArrayOutputStream exportObject;
 	//absolute path of the application
 	private String appPath=new String();
+	
+	private static Logger logger = null;
+	static {
+		logger = Logger.getLogger(FCExporter_SVG2ALL.class.getName());
+	}
 
 	/**
 	 * Constructor-Sets the path of the application and the export data
 	 * @param realPath path of the application
-	 * @param exportBean object conatining all information of export
+	 * @param exportBean object containing all information of export
 	 */
 	public FCExporter_SVG2ALL(String realPath, ExportBean exportBean) {
 		this.appPath=realPath;
@@ -55,6 +72,11 @@ public class FCExporter_SVG2ALL
 	 * @throws IOException
 	 */
 	public ByteArrayOutputStream exportProcessor(HttpServletResponse response) {
+
+		//get OS name
+		String OS=(System.getProperty("os.name"));
+		System.out.println(OS);
+
 		//get extension
 		String exportFormat = (String) exportBean
 				.getExportParameterValue("exportformat");
@@ -72,7 +94,11 @@ public class FCExporter_SVG2ALL
 		//get meta values
 		String meta_values = exportBean.getMetadataAsQueryString(null,
 				true, isHTML);
-
+		
+		// Background image meta data
+		JSONObject bgImgMeta = this.exportBean.getMetadata().getBgImage(); 
+		
+		
 		//for JPG first set to PNG
 		String extension2=new String();
 		if (extension.equals("jpeg") || extension.equals("jpg")) {
@@ -84,14 +110,23 @@ public class FCExporter_SVG2ALL
 		if (!extension.equals("svg") ) {
 
 			//create temporary directory
-			createDirectory();
-
+			createDirectory("", "fusioncharts_temp");
+			createDirectory("fusioncharts_temp\\", "temp");
+			
 			//create temporary file Name
 			long timeInMills = System.currentTimeMillis();
 			String tempName= new String("temp"+timeInMills);
-			String tempOutputFileName=new String(appPath+"fusioncharts_temp\\"+tempName+"."+extension);
-			String tempOutputJpgFileName=new String(appPath+"fusioncharts_temp\\"+tempName+".jpg");
-
+			String tempOutputFileName = null,tempOutputJpgFileName = null;
+			if(OS.startsWith("Windows"))
+			{
+				tempOutputFileName=new String(appPath+"fusioncharts_temp\\"+tempName+"."+extension);
+				tempOutputJpgFileName=new String(appPath+"fusioncharts_temp\\"+tempName+".jpg");
+			}
+			else if(OS.startsWith("Linux"))
+			{
+				tempOutputFileName=new String(appPath+"fusioncharts_temp/"+tempName+"."+extension);
+				tempOutputJpgFileName=new String(appPath+"fusioncharts_temp/"+tempName+".jpg");
+			}
 			//Set Inkscape and ImageMagick path
 			String inkscapePath=new String(ExportConfiguration.INKSCAPE_PATH);
 			String imageMagickPath=new String(ExportConfiguration.IMAGEMAGICK_PATH);
@@ -128,12 +163,38 @@ public class FCExporter_SVG2ALL
 
 			//Create temporary SVG file to feed data to Inkscape and ImageMagick
 			File svgFile = null;
+			File tempBgImgFile = null;
 			try {
 				svgFile = File.createTempFile("fusioncahrts", ".svg",new File(appPath+"fusioncharts_temp"));
 				//System.out.println("SVG file saved at:"+ svgFile.getAbsolutePath());
 				BufferedWriter bw = new BufferedWriter(new FileWriter(svgFile));
 				bw.write(exportBean.getStream());
 				bw.close();
+				
+				if(bgImgMeta != null){
+					String encodingPrefix = "base64,";
+					Iterator<String> imageItr = bgImgMeta.keys();
+					String imgKey = null;
+					while(imageItr.hasNext()){
+						imgKey = imageItr.next();
+						String dataURL = (String)((JSONObject)bgImgMeta.get(imgKey)).get("encodedData"); 
+						String imgName = (String)((JSONObject)bgImgMeta.get(imgKey)).get("name");
+						String imgExt = (String)((JSONObject)bgImgMeta.get(imgKey)).get("type");
+						
+						int contentStartIndex = dataURL.indexOf(encodingPrefix) + encodingPrefix.length();
+						String bgImgEncoded = dataURL.substring(contentStartIndex);
+						
+						tempBgImgFile = createOrOverrideFile(appPath+"fusioncharts_temp\\temp\\" + imgName + "." + imgExt);
+						
+						if(tempBgImgFile != null){
+							OutputStream _imgStream = new FileOutputStream(tempBgImgFile);
+							if(_imgStream != null){
+								_imgStream.write(Base64.decodeBase64(bgImgEncoded));
+								_imgStream.close();
+							}
+						}
+					}
+				}
 			} catch (IOException e) {
 				errorSetVO.addError(LOGMESSAGE.E518);
 				errorSetVO.setOtherMessages(meta_values);
@@ -151,32 +212,57 @@ public class FCExporter_SVG2ALL
 			String cmd=sBuff.toString();
 			System.out.println("Command Inkscape :"+cmd);
 
-			//create a process to run inkscape command
-			ProcessBuilder builder = new ProcessBuilder(
-					"CMD", "/C",cmd);
-			builder.redirectErrorStream(true);
-			builder.directory(new File(inkscapePath));
 
-			//execute the process
-			Process p = null;
-			try {
-				p = builder.start();
-				//print Inkscape message 
-				BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
-				String line = null;
-				while (true) {
-					line = r.readLine();
-					if (line == null) { break; }
-					System.out.println(line);
+			//create a process to run Inkscape command in Windows
+			if(OS.startsWith("Windows"))
+			{
+				ProcessBuilder builder = new ProcessBuilder(
+						"CMD", "/C",cmd);
+				builder.redirectErrorStream(true);
+				builder.directory(new File(inkscapePath));
+
+				//execute the process
+				Process p = null;
+				try {
+					p = builder.start();
+					//print Inkscape message 
+					BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
+					String line = null;
+					while (true) {
+						line = r.readLine();
+						if (line == null) { break; }
+						System.out.println(line);
+					}
+				} catch (IOException e) {
+					errorSetVO.addError(LOGMESSAGE.E519);
+					errorSetVO.setOtherMessages(meta_values);
+					//e.printStackTrace();
+					writeError(response, isHTML, errorSetVO, exportTargetWindow);
+					return null;
 				}
-			} catch (IOException e) {
-				errorSetVO.addError(LOGMESSAGE.E519);
-				errorSetVO.setOtherMessages(meta_values);
-				//e.printStackTrace();
-				writeError(response, isHTML, errorSetVO, exportTargetWindow);
-				return null;
 			}
-
+			//create a process to run inkscape command in Linux
+			else if(OS.startsWith("Linux"))
+			{
+				Process p = null;
+				try {
+					p = Runtime.getRuntime().exec(cmd);
+					//print Inkscape message 
+					BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
+					String line = null;
+					while (true) {
+						line = r.readLine();
+						if (line == null) { break; }
+						System.out.println(line);
+					}
+				} catch (IOException e) {
+					errorSetVO.addError(LOGMESSAGE.E519);
+					errorSetVO.setOtherMessages(meta_values);
+					//e.printStackTrace();
+					writeError(response, isHTML, errorSetVO, exportTargetWindow);
+					return null;
+				}
+			}
 			//if format is jpg then convert the png to jpg using ImageMagick
 			if (extension2.equals("jpg")) {
 				//create the command to be fed into Imagemagick
@@ -186,32 +272,57 @@ public class FCExporter_SVG2ALL
 				String cmdJPG=sBuffJPG.toString();
 				System.out.println("Command ImageMagick :"+cmdJPG);
 
-				//create a process to run inkscape command
-				ProcessBuilder builderJPG = new ProcessBuilder(
-						"CMD", "/C",cmdJPG);
-				builderJPG.redirectErrorStream(true);
-				builderJPG.directory(new File(imageMagickPath));
-				//execute the process
-				Process pJPG = null;
-				try {
-					pJPG = builderJPG.start();
-					//print imagemagick message
-					BufferedReader r2 = new BufferedReader(new InputStreamReader(pJPG.getInputStream()));
-					String line2 = null;
-					while (true) {
-						line2 = r2.readLine();
-						if (line2 == null) { break; }
-						System.out.println(line2);
+				//create a process to run Imagemagick command
+				if(OS.startsWith("Windows"))
+				{
+					ProcessBuilder builderJPG = new ProcessBuilder(
+							"CMD", "/C",cmdJPG);
+					builderJPG.redirectErrorStream(true);
+					builderJPG.directory(new File(imageMagickPath));
+					//execute the process
+					Process pJPG = null;
+					try {
+						pJPG = builderJPG.start();
+						//print imagemagick message
+						BufferedReader r2 = new BufferedReader(new InputStreamReader(pJPG.getInputStream()));
+						String line2 = null;
+						while (true) {
+							line2 = r2.readLine();
+							if (line2 == null) { break; }
+							System.out.println(line2);
+						}
+					} catch (IOException e) {
+						errorSetVO.addError(LOGMESSAGE.E520);
+						errorSetVO.setOtherMessages(meta_values);
+						//e.printStackTrace();
+						writeError(response, isHTML, errorSetVO, exportTargetWindow);
+						return null;
 					}
-				} catch (IOException e) {
-					errorSetVO.addError(LOGMESSAGE.E520);
-					errorSetVO.setOtherMessages(meta_values);
-					//e.printStackTrace();
-					writeError(response, isHTML, errorSetVO, exportTargetWindow);
-					return null;
+				}
+				else if(OS.startsWith("Linux"))
+				{
+					Process pJPG = null;
+					try {
+						pJPG = Runtime.getRuntime().exec(cmdJPG);
+						//print Inkscape message 
+						BufferedReader r = new BufferedReader(new InputStreamReader(pJPG.getInputStream()));
+						String line = null;
+						while (true) {
+							line = r.readLine();
+							if (line == null) { break; }
+							System.out.println(line);
+						}
+					} catch (IOException e) {
+						errorSetVO.addError(LOGMESSAGE.E519);
+						errorSetVO.setOtherMessages(meta_values);
+						//e.printStackTrace();
+						writeError(response, isHTML, errorSetVO, exportTargetWindow);
+						return null;
+					}
 				}
 			}
 
+			//************************************IMAGE CREATED**************************************************//
 			//get the image file
 			File outImgFile = new File(tempOutputFileName);
 
@@ -220,8 +331,9 @@ public class FCExporter_SVG2ALL
 			{
 				errorSetVO.addError(LOGMESSAGE.E521);
 			}
-
-
+			
+			//***************-CONVERSION FROM IMG to BYTE STREAM-***************************//
+			
 			//Put the image file in ByteArrayOutputStream 
 			FileInputStream fis = null;
 			try {
@@ -233,7 +345,8 @@ public class FCExporter_SVG2ALL
 				writeError(response, isHTML, errorSetVO, exportTargetWindow);
 				return null;
 			}
-			ByteArrayOutputStream bos = new ByteArrayOutputStream();
+			
+			ByteArrayOutputStream bos = new ByteArrayOutputStream();// img written in bos
 			byte[] buf = new byte[1024];
 			try {
 				for (int readNum; (readNum = fis.read(buf)) != -1;) {
@@ -254,20 +367,37 @@ public class FCExporter_SVG2ALL
 				}
 			}
 			//Delete the temporary file s and then the folder itself
-			File temp_folder=new File(appPath + "fusioncharts_temp");
-			String[]entries = temp_folder.list();
-			for(String s: entries){
-				File currentFile = new File(temp_folder.getPath(),s);
-				currentFile.delete();
-			}
-			temp_folder.delete();
-
+			//deleteFilesInFolder(appPath + "fusioncharts_temp\\temp");
+			//deleteFilesInFolder(appPath + "fusioncharts_temp");
 			//put bytes in export object
 			exportObject=bos;
 		} 
 		//if exportFormat is SVG send bytes directly
 		else if (extension.equals("svg")) {
-			byte[] buf = exportBean.getStream().getBytes();
+			String imgKey = null;
+			String svgStr=exportBean.getStream();
+			
+			if(bgImgMeta != null){
+				Iterator<String> imageItr = bgImgMeta.keys();
+				while(imageItr.hasNext()){
+					imgKey = imageItr.next();
+					
+					String dataURL = (String)((JSONObject)bgImgMeta.get(imgKey)).get("encodedData");
+					String imgName = (String)((JSONObject)bgImgMeta.get(imgKey)).get("name");
+					String imgExt = (String)((JSONObject)bgImgMeta.get(imgKey)).get("type");
+					String fullImgName = imgName + "." + imgExt;
+					String svgImgRef = "temp/"+fullImgName;
+					
+					while(svgStr.indexOf(svgImgRef) != -1){
+						svgStr = svgStr.replaceAll(svgImgRef, dataURL);
+					}
+					
+				}
+			}
+			
+
+			// dind image tag in svg 
+			byte[] buf = svgStr.getBytes();
 			ByteArrayOutputStream bos = new ByteArrayOutputStream(buf.length);
 			bos.write(buf, 0, buf.length);
 			exportObject=bos;
@@ -345,15 +475,15 @@ public class FCExporter_SVG2ALL
 					}
 				}
 			}
-			
+
 			String pathToDisplay = ExportConfiguration.HTTP_URI + "/"
 					+ fileName;
 			if (ExportConfiguration.HTTP_URI.endsWith("/")) {
 				pathToDisplay = ExportConfiguration.HTTP_URI + fileName;
 			}
-			
+
 			//System.out.println("complete file path :"+completeFilePath);
-			
+
 			//write to file
 			OutputStream outputStream = null;
 			try {
@@ -369,7 +499,7 @@ public class FCExporter_SVG2ALL
 				e.printStackTrace();
 				return null;
 			}
-			
+
 			meta_values = exportBean.getMetadataAsQueryString(pathToDisplay,
 					false, isHTML);
 			if (logMessageSetVO.getErrorsSet() == null
@@ -420,10 +550,36 @@ public class FCExporter_SVG2ALL
 	/**
 	 * Create a temporary directory
 	 */
-	private void createDirectory() {
-		File f = new File(appPath + "fusioncharts_temp");
+	private void createDirectory(String baseprefix, String dirName) {
+		File f = new File(appPath + baseprefix + dirName);
 		if (!f.exists()) {
 			f.mkdir();
+		}
+	}
+	
+	private File createOrOverrideFile(String filePath) {
+		File f = new File(filePath);
+		if (!f.exists() || f.isDirectory()) {
+			try {
+				f.createNewFile();
+				return f;
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		return null;
+	}
+	
+	private void deleteFilesInFolder(String folderPath) {
+		File temp_folder=new File(folderPath);
+		if(temp_folder.isDirectory()){
+			String[]entries = temp_folder.list();
+			for(String s: entries){
+				File currentFile = new File(temp_folder.getPath(),s);
+				currentFile.delete();
+			}
+			temp_folder.delete();
 		}
 	}
 	/**
