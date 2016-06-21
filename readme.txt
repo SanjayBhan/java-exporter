@@ -20,7 +20,7 @@ back to the browser.
 Version
 =======
 
-1.0
+2.0
 
 Requirements
 ============

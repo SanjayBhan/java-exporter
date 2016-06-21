@@ -1,3 +1,11 @@
+// Version History
+// ===============
+// 2.0 [ 21 June 2016 ]
+// - Support export if direct image base64 encoded data provided (for FusionCharts v 3.11.0 or more)
+// - Support for download of xls format
+// - Export with images suppported for every format including svg if browser is capable of sending the image data
+// 	as base64 data.
+
 package com.fusioncharts.exporter.servlet;
 
 import java.io.ByteArrayOutputStream;
@@ -8,6 +16,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import java.io.ByteArrayInputStream;
+import sun.misc.BASE64Decoder;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -60,15 +71,19 @@ public class FCExporter extends HttpServlet {
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		// Create the bean, set all the properties
 		System.out.println("PRINTING PARAMETER");
-		Map<String, String[]> paramMap = request.getParameterMap();
-		System.out.println(paramMap.toString());
-		
-		FusionChartsExportData exportData = new FusionChartsExportData(request
-				.getParameter("stream"), request.getParameter("parameters"),
-				request.getParameter("meta_width"), request
-				.getParameter("meta_height"), request
-				.getParameter("meta_DOMId"), request
-				.getParameter("meta_bgColor"), request.getParameter("encodedImgData"));
+		//Map<String, String[]> paramMap = request.getParameterMap();
+		//System.out.println(paramMap.toString());
+                System.out.println(request);
+
+		FusionChartsExportData exportData = new FusionChartsExportData(
+                        request.getParameter("stream"), 
+                        request.getParameter("stream_type"),
+                        request.getParameter("parameters"),
+                        request.getParameter("meta_width"), 
+                        request.getParameter("meta_height"), 
+                        request.getParameter("meta_DOMId"), 
+                        request.getParameter("meta_bgColor"), 
+                        request.getParameter("encodedImgData"));
 		ExportBean exportBean = FusionChartsExportHelper
 				.parseExportRequestStream(exportData);               
 
@@ -114,7 +129,7 @@ public class FCExporter extends HttpServlet {
 		// then find the delegate for this exportFormat and delegate the export
 		// work to it
 		else {
-
+                       
 			if (!exportAction.equals("download")) {
 				if (!SAVEFOLDEREXISTS) {
 					logMessageSetVO.addError(LOGMESSAGE.E508);
@@ -148,7 +163,7 @@ public class FCExporter extends HttpServlet {
 				return;
 			} 
 			else {
-
+                               
 				// no errors - call the delegate for the export and
 				// delegate the export work to it
 				// The delegate will process the request, to create the chart
@@ -156,10 +171,27 @@ public class FCExporter extends HttpServlet {
 
 				//create an exporter for converting SVG to ALL formats
 				FCExporter_SVG2ALL fcExporter =new FCExporter_SVG2ALL(getServletContext().getRealPath("/"),exportBean);
+    
+                                ByteArrayOutputStream exportObject;
+                                
+                                //if stream_type is IMAGE_DATA the it will direct export the output
+                                if(exportData.getStream_type().equals("IMAGE-DATA")) 
+                                {
+                                    String base64ImageData = exportData.getStream().split(",")[1];
+                                    byte[] imageByte;
+                                    BASE64Decoder decoder = new BASE64Decoder();
+                                    imageByte = decoder.decodeBuffer(base64ImageData);
 
-				//call exportProcessor which processes the SVG stream and returns an image in the form of bytes
-				ByteArrayOutputStream exportObject = fcExporter
-						.exportProcessor(response);
+                                    ByteArrayOutputStream bos = new ByteArrayOutputStream(imageByte.length);
+                                    bos.write(imageByte, 0, imageByte.length);
+                                    exportObject = bos;
+
+                                } else {
+                                    //call exportProcessor which processes the SVG stream and returns an image in the form of bytes
+                                    exportObject = fcExporter.exportProcessor(response);
+                                }
+				
+                                 
 				if(!(exportObject==null))
 				{
 				//Save the bytes as an image or send them to the browser as download.
@@ -223,6 +255,7 @@ public class FCExporter extends HttpServlet {
 	 */
 	@Override
 	public void init(ServletConfig config) throws ServletException {
+   
 		super.init(config);
 		logger.info("FCExporter Servlet Init called");
 		// load properties file
