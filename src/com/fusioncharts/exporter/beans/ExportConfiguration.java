@@ -40,11 +40,13 @@ public class ExportConfiguration {
 	 */
 
 	public static String SAVEPATH = "./";
+  // like "/home/suvradipsaha/NetBeansProjects/fc-exporter/build/web/testMe"
 	/**
 	 * The absolute path to the save folder, SAVEPATH and SAVEABSOLUTEPATH will
 	 * have same value if user provides absolute path
 	 */
 	public static String SAVEABSOLUTEPATH = "./";
+  // like "/home/suvradipsaha/NetBeansProjects/fc-exporter/build/web/testMe"
 
 	/**
 	 * IMPORTANT: This constant HTTP_URI stores the HTTP reference to the folder
