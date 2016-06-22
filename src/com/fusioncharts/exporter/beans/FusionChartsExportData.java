@@ -18,6 +18,7 @@ import org.json.JSONObject;
 public class FusionChartsExportData {
 
 	protected String stream = null;
+        protected String stream_type = null;
 	protected String parameters = null;
 	protected String meta_width = null;
 	protected String meta_height = null;
@@ -35,16 +36,18 @@ public class FusionChartsExportData {
 	 * @param meta_DOMId
 	 * @param meta_bgColor
 	 */
-	public FusionChartsExportData(String stream, String parameters,
+	public FusionChartsExportData(String stream, String steam_type ,String parameters,
 			String meta_width, String meta_height, String meta_DOMId,
 			String meta_bgColor, String meta_bgImageData) {
 		super();
 		this.stream = stream;
+                this.stream_type = steam_type;
 		this.parameters = parameters;
-		this.meta_width = meta_width;
-		this.meta_height = meta_height;
+		this.meta_width = checkW(meta_width);
+		this.meta_height = checkH(meta_height);
 		this.meta_DOMId = meta_DOMId;
 		this.meta_bgColor = meta_bgColor;
+         
 		if(meta_bgImageData != null){
 			this.meta_bgImageData = new JSONObject(meta_bgImageData);
 		}
@@ -103,7 +106,16 @@ public class FusionChartsExportData {
 	public String getStream() {
 		return stream;
 	}
-
+        
+        /**
+	 * Returns the value in the field stream_type
+	 * 
+	 * @return the stream
+	 */
+	public String getStream_type() {
+		return stream_type;
+	}
+            
 	/**
 	 * Sets the value for meta_bgColor
 	 * 
@@ -171,4 +183,17 @@ public class FusionChartsExportData {
 	public void setMeta_bgImageData(JSONObject meta_bgImageData) {
 		this.meta_bgImageData = meta_bgImageData;
 	}
+        
+        
+        private String checkW(String w) {
+            if(w == null)
+                w = "500";
+            return w;
+        }
+        
+        private String checkH(String H) {
+            if(H == null)
+                H = "300";
+            return H;
+        }
 }

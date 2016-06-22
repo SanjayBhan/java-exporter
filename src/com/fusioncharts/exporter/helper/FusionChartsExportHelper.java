@@ -48,6 +48,7 @@ public class FusionChartsExportHelper {
 		handlerAssociationsMap.put("PNG", "IMG");
 		handlerAssociationsMap.put("GIF", "IMG");
 		handlerAssociationsMap.put("SVG", "IMG");
+                handlerAssociationsMap.put("XLS", "XLS");
 
 		mimeTypes.put("jpg", "image/jpeg");
 		mimeTypes.put("jpeg", "image/jpeg");
@@ -55,6 +56,7 @@ public class FusionChartsExportHelper {
 		mimeTypes.put("gif", "image/gif");
 		mimeTypes.put("pdf", "application/pdf");
 		mimeTypes.put("svg", "image/svg+xml");
+                mimeTypes.put("xls", "application/vnd.ms-excel");
 		
 		extensions.put("jpeg", "jpg");
 		extensions.put("jpg", "jpg");
@@ -62,6 +64,7 @@ public class FusionChartsExportHelper {
 		extensions.put("gif", "gif");
 		extensions.put("pdf", "pdf");
 		extensions.put("svg", "svg");
+                extensions.put("xls", "xls");
 	}
 
 	/**

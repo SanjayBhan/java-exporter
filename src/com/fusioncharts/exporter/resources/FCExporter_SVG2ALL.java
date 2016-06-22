@@ -61,7 +61,7 @@ public class FCExporter_SVG2ALL
 	 * @param exportBean object containing all information of export
 	 */
 	public FCExporter_SVG2ALL(String realPath, ExportBean exportBean) {
-		this.appPath=realPath;
+		this.appPath=realPath + "/";
 		this.exportBean=exportBean;
 	}
 
@@ -72,7 +72,6 @@ public class FCExporter_SVG2ALL
 	 * @throws IOException
 	 */
 	public ByteArrayOutputStream exportProcessor(HttpServletResponse response) {
-
 		//get OS name
 		String OS=(System.getProperty("os.name"));
 		System.out.println(OS);
@@ -111,7 +110,7 @@ public class FCExporter_SVG2ALL
 
 			//create temporary directory
 			createDirectory("", "fusioncharts_temp");
-			createDirectory("fusioncharts_temp\\", "temp");
+			createDirectory("fusioncharts_temp/", "temp");
 			
 			//create temporary file Name
 			long timeInMills = System.currentTimeMillis();
@@ -119,8 +118,8 @@ public class FCExporter_SVG2ALL
 			String tempOutputFileName = null,tempOutputJpgFileName = null;
 			if(OS.startsWith("Windows"))
 			{
-				tempOutputFileName=new String(appPath+"fusioncharts_temp\\"+tempName+"."+extension);
-				tempOutputJpgFileName=new String(appPath+"fusioncharts_temp\\"+tempName+".jpg");
+				tempOutputFileName=new String(appPath+"fusioncharts_temp/"+tempName+"."+extension);
+				tempOutputJpgFileName=new String(appPath+"fusioncharts_temp/"+tempName+".jpg");
 			}
 			else if(OS.startsWith("Linux"))
 			{
@@ -167,10 +166,12 @@ public class FCExporter_SVG2ALL
 			try {
 				svgFile = File.createTempFile("fusioncahrts", ".svg",new File(appPath+"fusioncharts_temp"));
 				//System.out.println("SVG file saved at:"+ svgFile.getAbsolutePath());
-				BufferedWriter bw = new BufferedWriter(new FileWriter(svgFile));
-				bw.write(exportBean.getStream());
-				bw.close();
-				
+				//BufferedWriter bw = new BufferedWriter(new FileWriter(svgFile));
+				//bw.write(exportBean.getStream());
+				//bw.close();
+                                
+				String svgStr = exportBean.getStream();
+                                
 				if(bgImgMeta != null){
 					String encodingPrefix = "base64,";
 					Iterator<String> imageItr = bgImgMeta.keys();
@@ -184,17 +185,30 @@ public class FCExporter_SVG2ALL
 						int contentStartIndex = dataURL.indexOf(encodingPrefix) + encodingPrefix.length();
 						String bgImgEncoded = dataURL.substring(contentStartIndex);
 						
-						tempBgImgFile = createOrOverrideFile(appPath+"fusioncharts_temp\\temp\\" + imgName + "." + imgExt);
+						tempBgImgFile = createOrOverrideFile(appPath+"fusioncharts_temp/temp/" + imgName + "." + imgExt);
 						
 						if(tempBgImgFile != null){
 							OutputStream _imgStream = new FileOutputStream(tempBgImgFile);
 							if(_imgStream != null){
-								_imgStream.write(Base64.decodeBase64(bgImgEncoded));
+								_imgStream.write(Base64.decodeBase64(bgImgEncoded.getBytes()));
 								_imgStream.close();
 							}
 						}
+                                                
+                                                String fullImgName = imgName + "." + imgExt;
+                                                String svgImgRef = "temp/"+fullImgName;
+
+                                                while(svgStr.indexOf(svgImgRef) != -1){
+                                                        svgStr = svgStr.replaceAll(svgImgRef, dataURL);
+                                                }
 					}
+                                        
 				}
+                                
+                                BufferedWriter bw = new BufferedWriter(new FileWriter(svgFile));
+                                bw.write(svgStr);
+                                bw.close();
+                                
 			} catch (IOException e) {
 				errorSetVO.addError(LOGMESSAGE.E518);
 				errorSetVO.setOtherMessages(meta_values);
@@ -367,7 +381,7 @@ public class FCExporter_SVG2ALL
 				}
 			}
 			//Delete the temporary file s and then the folder itself
-			//deleteFilesInFolder(appPath + "fusioncharts_temp\\temp");
+			//deleteFilesInFolder(appPath + "fusioncharts_temp/temp");
 			//deleteFilesInFolder(appPath + "fusioncharts_temp");
 			//put bytes in export object
 			exportObject=bos;
@@ -519,7 +533,6 @@ public class FCExporter_SVG2ALL
 		}
 		//download
 		else{
-
 			// modifies response
 			response.setContentType(FusionChartsExportHelper
 					.getMimeTypeFor(exportFormat.toLowerCase()));
