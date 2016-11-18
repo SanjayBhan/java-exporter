@@ -34,8 +34,8 @@ public enum LOGMESSAGE {
 	E520(" Error in ImageMagick path.", ErrorType.ERROR),
 	E521(" Error in creating temporary image", ErrorType.ERROR),
 	E522(" Error in converting temporary image to bytes.", ErrorType.ERROR),
-	E523(" Error in Export Processor.", ErrorType.ERROR);
-	
+	E523(" Error in Export Processor.", ErrorType.ERROR),
+	E524(" Invalid file name.", ErrorType.ERROR);
 	
 	private String errorMessage = null;
 

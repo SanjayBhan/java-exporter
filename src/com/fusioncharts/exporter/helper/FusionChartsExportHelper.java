@@ -223,6 +223,7 @@ public class FusionChartsExportHelper {
 		
 		exportBean.setMetadata(metadata);
 		exportBean.setStream(stream);
+                exportBean.setStreamType(exportData.getStream_type());
 
 		HashMap<String, String> exportParamsFromRequest = bang(parameters);
 		// ToDO Validate the params

@@ -122,7 +122,7 @@ public class FCExporter extends HttpServlet {
 		//Map<String, String[]> paramMap = request.getParameterMap();
 		//System.out.println(paramMap.toString());
                 System.out.println(request);
-
+                
 		FusionChartsExportData exportData = new FusionChartsExportData(
                         request.getParameter("stream"), 
                         request.getParameter("stream_type"),
@@ -234,6 +234,8 @@ public class FCExporter extends HttpServlet {
                                     bos.write(imageByte, 0, imageByte.length);
                                     exportObject = bos;
 
+                                } else if(exportData.getStream_type().equals("bmp")) {
+                                    exportObject = fcExporter.exportProcessor(response);
                                 } else {
                                     //call exportProcessor which processes the SVG stream and returns an image in the form of bytes
                                     exportObject = fcExporter.exportProcessor(response);

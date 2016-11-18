@@ -48,6 +48,9 @@ public class FusionChartsExportData {
 		this.meta_DOMId = meta_DOMId;
 		this.meta_bgColor = meta_bgColor;
          
+                if(this.stream_type == null){
+                    this.stream_type = "bmp";
+                }    
 		if(meta_bgImageData != null){
 			this.meta_bgImageData = new JSONObject(meta_bgImageData);
 		}

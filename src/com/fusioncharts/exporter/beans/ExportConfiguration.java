@@ -74,6 +74,8 @@ public class ExportConfiguration {
 	public static boolean INTELLIGENTFILENAMING = true;
 
 
+        public static boolean DELETETEMPFILES = true;
+                
 	public static String FILESUFFIXFORMAT = "TIMESTAMP"; // can be TIMESTAMP or
 
 	/*
@@ -136,6 +138,8 @@ public class ExportConfiguration {
 					IMAGEMAGICK_PATH);
 			INKSCAPE_PATH = props.getProperty("INKSCAPE_PATH",
 					INKSCAPE_PATH);
+                        
+                        DELETETEMPFILES = Boolean.parseBoolean(props.getProperty("DELETETEMPFILES", "true"));
 
 		} catch (NullPointerException e) {
 			logger.info("NullPointer: Properties file not FOUND");

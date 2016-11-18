@@ -8,7 +8,8 @@ import java.util.Iterator;
 
 import com.fusioncharts.exporter.error.LOGMESSAGE;
 import com.fusioncharts.exporter.helper.FusionChartsExportHelper;
-
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 /**
  * Contains all the information required during the export process like chart
  * metadata, chart image data and export parameters
@@ -19,6 +20,7 @@ import com.fusioncharts.exporter.helper.FusionChartsExportHelper;
 public class ExportBean {
 	private ChartMetadata metadata;
 	private String stream;
+        private String streamType;
 	private HashMap<String, Object> exportParameters = null;
 
 	/**
@@ -151,6 +153,14 @@ public class ExportBean {
 		return stream;
 	}
 
+        /**
+	 * @return the stream type
+	 */
+	public String getStreamType() {
+		return streamType;
+	}
+
+        
 	/**
 	 * Whether the response is going to be html or plain text
 	 * 
@@ -188,6 +198,14 @@ public class ExportBean {
 	public void setStream(String stream) {
 		this.stream = stream;
 	}
+        
+        /**
+	 * @param stream
+	 *            the stream type to set
+	 */
+	public void setStreamType(String type) {
+		this.streamType = type;
+	}
 
 	/**
 	 * Validates the ExportBean to check if all the required values are present.
@@ -218,10 +236,10 @@ public class ExportBean {
 			errorSetVO.addError(LOGMESSAGE.E100);
 
 		}
-		if (exportParameters == null || exportParameters.isEmpty()) {
+                if (exportParameters == null || exportParameters.isEmpty()) {
 			// export data does not contain parameters
 			errorSetVO.addWarning(LOGMESSAGE.W102);
-		}
+		} 
 		// Export format should exist in the supported handlerAssociationsMap
 		else {
 			String exportFormat = (String) getExportParameterValue(ExportParameterNames.EXPORTFORMAT
@@ -232,6 +250,16 @@ public class ExportBean {
 			if (!exportFormatSupported) {
 				errorSetVO.addError(LOGMESSAGE.E517);
 			}
+                        
+                        //checking for valid file name without extension
+                        String exportfilename = (String) getExportParameterValue("exportfilename");
+                        exportfilename = exportfilename.toLowerCase();
+                        Pattern pattern = Pattern.compile("^[_a-zA-Z0-9\\-]+$");
+                        Matcher match = pattern.matcher(exportfilename);
+                        
+                        boolean test = match.find();
+                        if(!test)
+                            errorSetVO.addError(LOGMESSAGE.E524);                        
 		}
 		return errorSetVO;
 	}

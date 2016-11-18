@@ -24,6 +24,12 @@ import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletResponse;
 
+
+import java.awt.image.BufferedImage;
+import java.awt.image.RenderedImage;
+import javax.imageio.ImageIO;
+import java.awt.Color;
+
 import org.apache.commons.codec.binary.Base64;
 import org.json.JSONObject;
 
@@ -49,7 +55,7 @@ public class FCExporter_SVG2ALL
 	private ByteArrayOutputStream exportObject;
 	//absolute path of the application
 	private String appPath=new String();
-	
+	        
 	private static Logger logger = null;
 	static {
 		logger = Logger.getLogger(FCExporter_SVG2ALL.class.getName());
@@ -63,6 +69,8 @@ public class FCExporter_SVG2ALL
 	public FCExporter_SVG2ALL(String realPath, ExportBean exportBean) {
 		this.appPath=realPath + "/";
 		this.exportBean=exportBean;
+                //loading configuaration file
+                ExportConfiguration.loadProperties();
 	}
 
 	/**
@@ -103,6 +111,10 @@ public class FCExporter_SVG2ALL
 		if (extension.equals("jpeg") || extension.equals("jpg")) {
 			extension = "png";
 			extension2 = "jpg";
+                        
+		}else if (extension.equals("pdf")) {
+			extension = "png";
+			extension2 = "pdf";
 		}
 
 		//if not SVG
@@ -115,16 +127,18 @@ public class FCExporter_SVG2ALL
 			//create temporary file Name
 			long timeInMills = System.currentTimeMillis();
 			String tempName= new String("temp"+timeInMills);
-			String tempOutputFileName = null,tempOutputJpgFileName = null;
+			String tempOutputFileName = null,
+                               tempOutputJpgPdfFileName = null,
+                               tempPngFIleName = null;
 			if(OS.startsWith("Windows"))
 			{
 				tempOutputFileName=new String(appPath+"fusioncharts_temp/"+tempName+"."+extension);
-				tempOutputJpgFileName=new String(appPath+"fusioncharts_temp/"+tempName+".jpg");
+				tempOutputJpgPdfFileName=new String(appPath+"fusioncharts_temp/"+tempName+(extension2.equals("jpg") ? ".jpg" : ".pdf"));
 			}
 			else if(OS.startsWith("Linux"))
 			{
 				tempOutputFileName=new String(appPath+"fusioncharts_temp/"+tempName+"."+extension);
-				tempOutputJpgFileName=new String(appPath+"fusioncharts_temp/"+tempName+".jpg");
+				tempOutputJpgPdfFileName=new String(appPath+"fusioncharts_temp/"+tempName+(extension2.equals("jpg") ? ".jpg" : ".pdf"));
 			}
 			//Set Inkscape and ImageMagick path
 			String inkscapePath=new String(ExportConfiguration.INKSCAPE_PATH);
@@ -163,13 +177,18 @@ public class FCExporter_SVG2ALL
 			//Create temporary SVG file to feed data to Inkscape and ImageMagick
 			File svgFile = null;
 			File tempBgImgFile = null;
-			try {
-				svgFile = File.createTempFile("fusioncahrts", ".svg",new File(appPath+"fusioncharts_temp"));
-				//System.out.println("SVG file saved at:"+ svgFile.getAbsolutePath());
-				//BufferedWriter bw = new BufferedWriter(new FileWriter(svgFile));
-				//bw.write(exportBean.getStream());
-				//bw.close();
+                                  
+                    try {
+                            if(exportBean.getStreamType().equals("bmp")){
+                                String bstr = exportBean.getStream();
+                                BufferedImage img = map(600, 350, bstr);
+                                ImageIO.write(img, "PNG", new File(tempOutputFileName));
+
+                            } else {
                                 
+				svgFile = File.createTempFile("fusioncahrts", ".svg",new File(appPath+"fusioncharts_temp"));
+				System.out.println("SVG file saved at:"+ svgFile.getAbsolutePath());
+				
 				String svgStr = exportBean.getStream();
                                 
 				if(bgImgMeta != null){
@@ -208,7 +227,7 @@ public class FCExporter_SVG2ALL
                                 BufferedWriter bw = new BufferedWriter(new FileWriter(svgFile));
                                 bw.write(svgStr);
                                 bw.close();
-                                
+                            }       
 			} catch (IOException e) {
 				errorSetVO.addError(LOGMESSAGE.E518);
 				errorSetVO.setOtherMessages(meta_values);
@@ -226,9 +245,11 @@ public class FCExporter_SVG2ALL
 			String cmd=sBuff.toString();
 			System.out.println("Command Inkscape :"+cmd);
 
-
+                        //setting file name with path of png file
+                        tempPngFIleName = tempOutputFileName;
+                        
 			//create a process to run Inkscape command in Windows
-			if(OS.startsWith("Windows"))
+			if(OS.startsWith("Windows") && exportBean.getStreamType().equals("svg"))
 			{
 				ProcessBuilder builder = new ProcessBuilder(
 						"CMD", "/C",cmd);
@@ -256,7 +277,7 @@ public class FCExporter_SVG2ALL
 				}
 			}
 			//create a process to run inkscape command in Linux
-			else if(OS.startsWith("Linux"))
+			else if(OS.startsWith("Linux") && exportBean.getStreamType().equals("svg"))
 			{
 				Process p = null;
 				try {
@@ -278,11 +299,13 @@ public class FCExporter_SVG2ALL
 				}
 			}
 			//if format is jpg then convert the png to jpg using ImageMagick
-			if (extension2.equals("jpg")) {
+			if (extension2.equals("jpg") || extension2.equals("pdf")) {
 				//create the command to be fed into Imagemagick
 				StringBuffer sBuffJPG=new StringBuffer();
-				sBuffJPG.append("convert -quality 100 "+tempOutputFileName+" "+ tempOutputJpgFileName);
-				tempOutputFileName=tempOutputJpgFileName;
+                                //setting file name with path of png file
+                                tempPngFIleName = tempOutputFileName;
+				sBuffJPG.append("convert -quality 100 "+tempOutputFileName+" "+ tempOutputJpgPdfFileName);
+                                tempOutputFileName=tempOutputJpgPdfFileName;
 				String cmdJPG=sBuffJPG.toString();
 				System.out.println("Command ImageMagick :"+cmdJPG);
 
@@ -380,9 +403,16 @@ public class FCExporter_SVG2ALL
 					e.printStackTrace();
 				}
 			}
-			//Delete the temporary file s and then the folder itself
-			//deleteFilesInFolder(appPath + "fusioncharts_temp/temp");
-			//deleteFilesInFolder(appPath + "fusioncharts_temp");
+                        
+			//Delete the temporary files
+                        if(ExportConfiguration.DELETETEMPFILES){
+                            if(svgFile != null)
+                                deleteFilesInFolder(svgFile.getAbsolutePath());
+                            if(tempOutputFileName != null)
+                                deleteFilesInFolder(tempOutputFileName);
+                            if(tempPngFIleName != null)
+                                deleteFilesInFolder(tempPngFIleName);
+                        }
 			//put bytes in export object
 			exportObject=bos;
 		} 
@@ -556,7 +586,7 @@ public class FCExporter_SVG2ALL
 			} catch (Throwable e) {
 				return null;
 			}
-		}
+		}      
 		return "success";
 	}
 
@@ -585,15 +615,21 @@ public class FCExporter_SVG2ALL
 	}
 	
 	private void deleteFilesInFolder(String folderPath) {
-		File temp_folder=new File(folderPath);
-		if(temp_folder.isDirectory()){
-			String[]entries = temp_folder.list();
-			for(String s: entries){
-				File currentFile = new File(temp_folder.getPath(),s);
-				currentFile.delete();
-			}
-			temp_folder.delete();
-		}
+            //if any file or folder location came null
+            if(folderPath == null)
+                return;
+		
+            File temp_folder=new File(folderPath);	
+            if(temp_folder.isDirectory()){
+                String[]entries = temp_folder.list();
+                for(String s: entries){
+                    File currentFile = new File(temp_folder.getPath(),s);
+                    currentFile.delete();
+                }
+                temp_folder.delete();
+            } else {
+                temp_folder.delete();
+            }
 	}
 	/**
 	 * Writes the error.
@@ -625,4 +661,43 @@ public class FCExporter_SVG2ALL
 
 		}
 	}
+        
+        public static Color hex2Rgb(String colorStr) {
+            if(colorStr.length() == 6)
+                return new Color(
+                    Integer.valueOf( colorStr.substring( 0, 2 ), 16 ),
+                    Integer.valueOf( colorStr.substring( 2, 4 ), 16 ),
+                    Integer.valueOf( colorStr.substring( 4, 6 ), 16 ));
+            else 
+                return new Color(
+                    Integer.valueOf( colorStr.substring( 0, 1 ) + colorStr.substring( 0, 1 ), 16 ),
+                    Integer.valueOf( colorStr.substring( 1, 2 ) + colorStr.substring( 1, 2 ), 16 ),
+                    Integer.valueOf( colorStr.substring( 2, 3 ) + colorStr.substring( 2, 3 ), 16 ));
+        }
+        
+        private static BufferedImage map( int sizeX, int sizeY, String bstr ){
+            final BufferedImage res = new BufferedImage( sizeX, sizeY, BufferedImage.TYPE_INT_RGB );
+            int x=0, y=0;
+            
+            for (String retval: bstr.split(";")) {
+
+                y=0;
+                for(String retval1: retval.split(",")){
+                    String[] code = retval1.split("_");
+ 
+                    for(int x1 = 0; x1 < Integer.parseInt(code[1]) ; x1++){
+
+                        if(code[0].length() == 0)
+                            res.setRGB(y, x, hex2Rgb("ffffff").getRGB());    
+                        else if(code[0].length() > 2)
+                            res.setRGB(y, x, hex2Rgb(code[0]).getRGB());
+                            
+                        y++;
+                    }
+                }
+                
+                x++;
+            }
+            return res;
+        }
 }
