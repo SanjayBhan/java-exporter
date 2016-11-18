@@ -663,18 +663,14 @@ public class FCExporter_SVG2ALL
 	}
         
         public static Color hex2Rgb(String colorStr) {
-            if(colorStr.length() == 6)
-                return new Color(
-                    Integer.valueOf( colorStr.substring( 0, 2 ), 16 ),
-                    Integer.valueOf( colorStr.substring( 2, 4 ), 16 ),
-                    Integer.valueOf( colorStr.substring( 4, 6 ), 16 ));
-            else 
-                return new Color(
-                    Integer.valueOf( colorStr.substring( 0, 1 ) + colorStr.substring( 0, 1 ), 16 ),
-                    Integer.valueOf( colorStr.substring( 1, 2 ) + colorStr.substring( 1, 2 ), 16 ),
-                    Integer.valueOf( colorStr.substring( 2, 3 ) + colorStr.substring( 2, 3 ), 16 ));
+            if(colorStr.length() < 6)
+                colorStr = String.format("%0"+ (6 - colorStr.length() )+"d%s",0 ,colorStr); 
+            
+            return new Color(
+                Integer.valueOf( colorStr.substring( 0, 2 ), 16 ),
+                Integer.valueOf( colorStr.substring( 2, 4 ), 16 ),
+                Integer.valueOf( colorStr.substring( 4, 6 ), 16 ));
         }
-        
         private static BufferedImage map( int sizeX, int sizeY, String bstr ){
             final BufferedImage res = new BufferedImage( sizeX, sizeY, BufferedImage.TYPE_INT_RGB );
             int x=0, y=0;

@@ -17,23 +17,27 @@
  *  ChangeLog / Version History:
  *  ----------------------------
  *       
+ *   3.1 [18 Nov 2016]
+ *       - Fixes for vulnerability file name
+ *       - Support for old flash chart exporting
+ * 
  *   3.0 [ 21 June 2016 ] 
  *       - Integrated with new Export feature of FusionCharts 3.11.0
  *       - Support for export if direct image is base64 encoded
  *         (data provided by the FusionCharts v3.11.0)
  *         Add a comment to this line
  *       - Support for download in the XLS format
- *       - Export with images suppported for every format including svg 
+ *       - Export with images supported for every format including svg 
  *         if browser is capable of sending the image data as SVG format.
  *
- * 	 2.0 [ 29 December 2015 ]
- *			- Supports image exporting in all format(jpg,png,pdf)
+ *   2.0 [ 29 December 2015 ]
+ *	 - Supports image exporting in all format(jpg,png,pdf)
  *
  *   1.0 [ 14 December 2014 ]
  *       - can process chart data to jpg image and response back to client side as download.
  *       - Support for JavaScript Chart (SVG)
  *       - can save to server side directory
- *       - can provide download or open in popup window.
+ *       - can provide download or open in pop-up window.
  *       - can save as PDF/JPG/PNG
  *
  *
