@@ -93,7 +93,7 @@ IMAGEMAGICK_PATH=C:\\Program Files\\ImageMagick-6.9.0-Q16
 
 FUSIONCHARTS:
 
-Copyright (c) FusionCharts Technologies LLP
+Copyright (c) InfoSoft Global Pvt. Ltd.
 License Information at http://www.fusioncharts.com/license
 
 Known Issues / limitations:
