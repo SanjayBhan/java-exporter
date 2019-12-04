@@ -1,6 +1,6 @@
 /*
  FusionCharts JavaScript Library - ZoomScatter Chart
- Copyright FusionCharts Technologies LLP
+ Copyright InfoSoft Global Pvt. Ltd.
  License Information at <http://www.fusioncharts.com/license>
 
  @version 3.11.0-rc.9

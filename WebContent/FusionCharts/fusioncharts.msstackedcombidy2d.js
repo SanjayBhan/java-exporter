@@ -1,6 +1,6 @@
 /*
  FusionCharts JavaScript Library MSStackedCombiDY2D Chart
- Copyright FusionCharts Technologies LLP
+ Copyright InfoSoft Global Pvt. Ltd.
  License Information at <http://www.fusioncharts.com/license>
 
  @version 3.10.0-rc.3
