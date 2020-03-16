@@ -97,7 +97,7 @@ License
 
 FUSIONCHARTS:
 
-Copyright (c) InfoSoft Global Pvt. Ltd.
+Copyright (c) FusionCharts, Inc.
 License Information at http://www.fusioncharts.com/license
 
 Known Issues / limitations:
