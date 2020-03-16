@@ -1,6 +1,6 @@
 /*
  FusionCharts JavaScript Library - Tree Map Chart
- Copyright InfoSoft Global Pvt. Ltd.
+ Copyright FusionCharts, Inc.
  License Information at <http://www.fusioncharts.com/license>
 
  @version 3.11.0-rc.9

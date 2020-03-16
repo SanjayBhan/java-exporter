@@ -1,11 +1,11 @@
 /*
  FusionCharts JavaScript Library
- Copyright InfoSoft Global Pvt. Ltd.
+ Copyright FusionCharts, Inc.
  License Information at <http://www.fusioncharts.com/license>
 
  @version 3.11.0-rc.9
  FusionCharts JavaScript Library
- Copyright InfoSoft Global Pvt. Ltd.
+ Copyright FusionCharts, Inc.
  License Information at <http://www.fusioncharts.com/license>
 
  @version 3.11.0-rc.9

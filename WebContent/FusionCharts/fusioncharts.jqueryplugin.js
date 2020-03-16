@@ -1,9 +1,9 @@
 /*
  FusionCharts JavaScript Library jQuery Plugin v1.0.4
- Copyright InfoSoft Global Pvt. Ltd.
+ Copyright FusionCharts, Inc.
  License Information at <http://www.fusioncharts.com/license>
 
- @author InfoSoft Global Pvt. Ltd.
+ @author FusionCharts, Inc.
 */
 FusionCharts.register("module",["private","HTMLTableDataHandler",function(){var q=this,z=q.window,E=z.document,h=function(c){var a,b,f=[];b=0;for(a=c.length;b<a;b+=1)3!==c[b].nodeType&&f.push(c[b]);return f},F=function(c){var a=h(c.childNodes);if(a.length){if("TBODY"===a[0].nodeName)return a[0];if("THEAD"===a[0].nodeName&&a[1]&&"TBODY"===a[1].nodeName)return a[1]}return c},v=function(c){return void 0!==c.innerText?c.innerText:c.textContent},A=function(c){var a,b,f,p,d,e,k=1,g,l={},r=[];a=0;for(f=
 c.length;a<f;a+=1)for(d=h(c[a].childNodes),k=1,b=e=0,p=d.length;b<p;b+=1){g=b+k+e-1;l[g]&&a-l[g].rowNum<l[g].row&&(e+=l[g].col,g+=l[g].col);1<parseInt(d[b].getAttribute("rowspan"),10)&&(l[g]||(l[g]={}),l[g].rowNum=a,l[g].row=parseInt(d[b].getAttribute("rowspan"),10),1<parseInt(d[b].getAttribute("colspan"),10)?l[g].col=parseInt(d[b].getAttribute("colspan"),10):l[g].col=1);for(;r.length<=g;)r.push({childNodes:[]});r[g].childNodes.push(d[b]);1<parseInt(d[b].getAttribute("colspan"),10)&&(k+=parseInt(d[b].getAttribute("colspan"),
