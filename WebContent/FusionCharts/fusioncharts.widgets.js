@@ -1,11 +1,11 @@
 /*
  FusionCharts JavaScript Library
- Copyright FusionCharts Technologies LLP
+ Copyright FusionCharts, Inc.
  License Information at <http://www.fusioncharts.com/license>
 
  @version 3.11.0-rc.9
  FusionCharts JavaScript Library
- Copyright FusionCharts Technologies LLP
+ Copyright FusionCharts, Inc.
  License Information at <http://www.fusioncharts.com/license>
 
  @version 3.11.0-rc.9
